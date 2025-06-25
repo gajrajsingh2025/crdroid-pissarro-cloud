@@ -1,0 +1,48 @@
+name: Build crDroid for pissarro
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  build:
+    name: Build ROM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup repo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y repo
+
+      - name: Initialize crDroid 14
+        run: repo init -u https://github.com/crdroidandroid/android.git -b 14.0 && repo sync -c -j${{ runner.hardware_threads }}
+
+      - name: Import trees
+        run: |
+          cp -r device/ xiaomi/pissarro device/
+          cp -r vendor/ xiaomi/pissarro vendor/
+          cp -r kernel/ xiaomi/pissarro kernel/
+
+      - name: Build ROM
+        run: |
+          source build/envsetup.sh
+          lunch crdroid_pissarro-userdebug
+          mka bacon
+
+      - name: Inject GApps
+        run: |
+          wget -O nikgapps.zip ${{ secrets.GAPPS_URL }}
+          unzip nikgapps.zip -d out/target/product/pissarro/system
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: crdroid-pissarro-rom
+          path: out/target/product/pissarro/*.zip
