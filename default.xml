@@ -1,0 +1,5 @@
+<manifest>
+  <remote name="crdroid" fetch="https://github.com/crdroidandroid/android" />
+  <default revision="14.0" remote="crdroid" sync-j="4" />
+  <project name="platform_manifest" path="." revision="14.0" remote="crdroid" />
+</manifest>
